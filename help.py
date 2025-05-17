@@ -34,16 +34,20 @@ def simulador_carro(r, t, valor_total_bem, entrada_percentual=0.0):
     print(f"Valor total do bem: R${valor_total_bem:.2f}")
     print(f"Entrada ({entrada_percentual*100:.1f}%): R${entrada:.2f}")
 
+    saldo_devedor = pv
+
     dados = []
     for i in range(1, t + 1):
         pmt = float(npf.pmt(r / 12, t, -pv))
         ipmt = float(npf.ipmt(r / 12, i, t, -pv))
         ppmt = float(npf.ppmt(r / 12, i, t, -pv))
+        saldo_devedor -= ppmt
         dados.append({
             'Mês': i,
             'Prestação Mensal (R$)': round(pmt, 2),
             'Parcela de Juros (R$)': round(ipmt, 2),
-            'Amortização do Principal (R$)': round(ppmt, 2)
+            'Amortização do Principal (R$)': round(ppmt, 2),
+            'Saldo Devedor (R$)': round(saldo_devedor, 2)
         })
 
     df = pd.DataFrame(dados)
@@ -55,15 +59,34 @@ def simulador_carro(r, t, valor_total_bem, entrada_percentual=0.0):
     df['Juros Acumulados (R$)'] = juros_acumulado
     df['Amortização Acumulada (R$)'] = df['Amortização do Principal (R$)'].cumsum()
 
-    # Gráfico com seaborn (valores acumulados)
+    import plotly.express as px
+
+    fig = px.line(
+        df,
+        x='Mês',
+        y=['Juros Acumulados (R$)', 'Amortização Acumulada (R$)', 'Saldo Devedor (R$)'],
+        labels={'value': 'Valor (R$)', 'variable': 'Categoria'},
+        title='Evolução do Financiamento'
+    )
+    fig.for_each_trace(
+        lambda t: t.update(line=dict(
+            color={'Juros Acumulados (R$)': 'green',
+                   'Amortização Acumulada (R$)': 'blue',
+                   'Saldo Devedor (R$)': 'red'}[t.name])
+        )
+    )
+    fig.show()
+
+    # Gráfico Seaborn para os mesmos dados acumulados
     plt.figure(figsize=(12, 6))
-    sns.lineplot(data=df, x='Mês', y='Juros Acumulados (R$)', label='Juros Acumulados')
-    sns.lineplot(data=df, x='Mês', y='Amortização Acumulada (R$)', label='Amortização Acumulada')
-    plt.title('Acúmulo de Juros e Amortização ao Longo do Tempo')
+    sns.lineplot(data=df, x='Mês', y='Juros Acumulados (R$)', label='Juros Acumulados', color='green')
+    sns.lineplot(data=df, x='Mês', y='Amortização Acumulada (R$)', label='Amortização Acumulada', color='blue')
+    sns.lineplot(data=df, x='Mês', y='Saldo Devedor (R$)', label='Saldo Devedor', color='red')
+    plt.title('Evolução do Financiamento (Seaborn)')
     plt.xlabel('Mês')
     plt.ylabel('Valor (R$)')
-    plt.grid(True)
     plt.legend()
+    plt.grid(True)
     plt.tight_layout()
     plt.show()
 
