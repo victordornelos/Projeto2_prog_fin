@@ -1,0 +1,32 @@
+# Ignorar cache de Python
+__pycache__/
+*.pyc
+
+# Ignorar ambientes virtuais (caso use)
+.venv/
+env/
+venv/
+
+# Ignorar arquivos de configuração de IDEs
+.vscode/
+*.code-workspace
+.idea/
+
+# Ignorar arquivos de dependências e licença
+requirements.txt
+LICENSE
+
+# Ignorar arquivos de controle Git externos
+.gitattributes
+
+# Ignorar qualquer outro arquivo que não seja:
+# - .py (scripts)
+# - .ipynb (notebooks)
+# - .md (README)
+# - .xlsx (tabela)
+
+# Mas manter explicitamente os arquivos desejados:
+!*.py
+!*.ipynb
+!*.md
+!*.xlsx
