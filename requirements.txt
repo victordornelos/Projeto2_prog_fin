@@ -1,9 +1,0 @@
-pandas
-jupyter
-numpy 
-matplotlib
-seaborn
-plotly
-nbformat
-tabulate
-numpy-financial 
