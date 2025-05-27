@@ -11,30 +11,28 @@ import numpy_financial as npf
 
 
 def simulador_carro(r, t, valor_total_bem, entrada_percentual=0.0):
-    """
-    Simula um financiamento com parcelas mensais fixas (Tabela Price),
-    e retorna uma tabela com a composição de juros e amortização,
-    além de um gráfico e a razão entre valor total pago e valor à vista.
 
-    Parâmetros:
-    r  = taxa de juros anual (ex: 0.12 para 12% a.a)
-    t  = número total de meses (parcelas)
-    valor_total_bem = valor total do bem (valor financiado + entrada)
-    entrada_percentual = percentual do valor total pago à vista como entrada (ex: 0.1 para 10%)
-
-    Retorna:
-    - DataFrame com prestações, juros e amortização
-    - Gráfico com evolução de juros e amortização
-    - Impressão da relação total pago / valor à vista
-    """
+    # Cálculo da entrada e valor financiado
     entrada = valor_total_bem * entrada_percentual
-    pv = valor_total_bem - entrada
+    pv_original = valor_total_bem - entrada
+
+    # Cálculo do IOF
+    dias = t * 30
+    iof_adicional = 0.0038
+    iof_diario = 0.000082
+    iof_total_percentual = min(iof_adicional + iof_diario * dias, 0.0338)
+    iof_valor = pv_original * iof_total_percentual
+
+    pv = pv_original + iof_valor
+
     print(f"Valor total do bem: R${valor_total_bem:.2f}")
     print(f"Entrada ({entrada_percentual*100:.1f}%): R${entrada:.2f}")
+    print(f"IOF Total aplicado: R${iof_valor:.2f} ({iof_total_percentual*100:.2f}%)")
+    print(f"Valor financiado com IOF: R${pv:.2f}")
 
     saldo_devedor = pv
-
     dados = []
+
     for i in range(1, t + 1):
         pmt = float(npf.pmt(r / 12, t, -pv))
         ipmt = float(npf.ipmt(r / 12, i, t, -pv))
@@ -49,22 +47,15 @@ def simulador_carro(r, t, valor_total_bem, entrada_percentual=0.0):
         })
 
     df = pd.DataFrame(dados)
-    juros_acumulado = []
-    soma_juros = 0
-    for valor in df['Parcela de Juros (R$)']:
-        soma_juros += valor
-        juros_acumulado.append(soma_juros)
-    df['Juros Acumulados (R$)'] = juros_acumulado
+    df['Juros Acumulados (R$)'] = df['Parcela de Juros (R$)'].cumsum()
     df['Amortização Acumulada (R$)'] = df['Amortização do Principal (R$)'].cumsum()
-
-    import plotly.express as px
 
     fig = px.line(
         df,
         x='Mês',
         y=['Juros Acumulados (R$)', 'Amortização Acumulada (R$)', 'Saldo Devedor (R$)'],
         labels={'value': 'Valor (R$)', 'variable': 'Categoria'},
-        title='Evolução do Financiamento'
+        title='Evolução do Financiamento com IOF'
     )
     fig.for_each_trace(
         lambda t: t.update(line=dict(
@@ -75,34 +66,31 @@ def simulador_carro(r, t, valor_total_bem, entrada_percentual=0.0):
     )
     fig.show()
 
-    # Gráfico Seaborn para os mesmos dados acumulados
+    # Gráfico com Seaborn
     plt.figure(figsize=(12, 6))
     sns.lineplot(data=df, x='Mês', y='Juros Acumulados (R$)', label='Juros Acumulados', color='green')
     sns.lineplot(data=df, x='Mês', y='Amortização Acumulada (R$)', label='Amortização Acumulada', color='blue')
     sns.lineplot(data=df, x='Mês', y='Saldo Devedor (R$)', label='Saldo Devedor', color='red')
-    plt.title('Evolução do Financiamento (PRICE)')
+    plt.title('Evolução do Financiamento (Price) com IOF')
     plt.xlabel('Mês')
-    plt.ylabel('(R$)')
+    plt.ylabel('R$')
     plt.legend()
     plt.grid(False)
     plt.tight_layout()
     plt.show()
 
-    # Valor total pago (incluindo entrada)
     valor_total_prestacoes = df['Prestação Mensal (R$)'].sum()
     valor_total_pago = valor_total_prestacoes + entrada
     relacao_total_por_valor_total = valor_total_pago / valor_total_bem
 
-    # Exibindo a relação total pago / valor do bem
     print(f"Total pago em prestações: R${valor_total_prestacoes:.2f}")
     print(f"Valor total pago (incluindo entrada): R${valor_total_pago:.2f}")
-    print(f"Relação (Total pago / Valor do carro): {relacao_total_por_valor_total:.2f}")
+    print(f"Relação (Total pago / Valor do bem à vista): {relacao_total_por_valor_total:.2f}")
 
-    df.to_excel('simulador_carro.xlsx', index=False)
-    print("Tabela salva como 'simulador_carro.xlsx'.")
+    df.to_excel('simulador_carro_com_iof.xlsx', index=False)
+    print("Tabela salva como 'simulador_carro_com_iof.xlsx'.")
 
     return df
-
 
 # --- Adicionando simulador_casa ---
 def simulador_casa(r, t, valor_total_bem, entrada_percentual=0.0):
