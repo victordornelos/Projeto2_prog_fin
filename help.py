@@ -258,9 +258,7 @@ def simulador_casa(cet_anual, t, valor_total_bem, entrada_percentual=0.0, taxa_t
             break  # Interrompe o loop principal
 
     df = pd.DataFrame(dados)
-    # ... (restante do código para gráficos, resultados finais e salvamento do Excel como antes) ...
-    # ATENÇÃO: Mudar o nome do arquivo Excel na hora de salvar.
-    # Ex: df.to_excel('simulador_casa_amort_recalc.xlsx', index=False)
+
 
     df['Juros Acumulados (R$)'] = df['Parcela de Juros (R$)'].cumsum()
     df['Amortização Acumulada (R$)'] = df['Amortização do Principal (R$)'].cumsum()
@@ -317,7 +315,7 @@ def simulador_casa(cet_anual, t, valor_total_bem, entrada_percentual=0.0, taxa_t
         print(f"Relação (Total pago / Valor do bem): {relacao_total_por_valor_total:.2f}")
 
     saldo_residual_final = df['Saldo Devedor Final (R$)'].iloc[-1] if not df.empty else 0.0
-    if abs(saldo_residual_final) > 0.01:  # Deveria ser zero com a nova lógica
+    if abs(saldo_residual_final) > 0.01:  
         print(f"ATENÇÃO: Saldo devedor residual ao final dos {t} meses: R${saldo_residual_final:,.2f}")
     elif pv > 0:
         print("O financiamento foi quitado ao final do período.")
