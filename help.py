@@ -35,9 +35,9 @@ def simulador_carro(r, t, valor_total_bem, entrada_percentual=0.0):
     dados = []
 
     for i in range(1, t + 1):
-        pmt = float(npf.pmt(r / 12, t, -pv))
-        ipmt = float(npf.ipmt(r / 12, i, t, -pv))
-        ppmt = float(npf.ppmt(r / 12, i, t, -pv))
+        pmt = float(npf.pmt(r, t, -pv))
+        ipmt = float(npf.ipmt(r, i, t, -pv))
+        ppmt = float(npf.ppmt(r, i, t, -pv))
         saldo_devedor -= ppmt
         dados.append({
             'Mês': i,
